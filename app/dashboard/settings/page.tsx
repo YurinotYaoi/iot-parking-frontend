@@ -75,8 +75,8 @@ export default function SettingsPage() {
     fetchUser();
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
     const authData = JSON.parse(localStorage.getItem('flexpark_auth') || '{}');
     const token = authData.token;
@@ -129,7 +129,7 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder={user.firstName || "First Name"}
               value={user.firstName}
-              onChange={(e) => setUser({ ...user, firstName: e.target.value })}
+              onChange={(event) => setUser({ ...user, firstName: event.target.value })}
             />
           </div>
           <div className="mb-4">
@@ -143,7 +143,7 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder={user.middleName || "Middle Name"}
               value={user.middleName}
-              onChange={(e) => setUser({ ...user, middleName: e.target.value })}
+              onChange={(event) => setUser({ ...user, middleName: event.target.value })}
             />
           </div>
           <div className="mb-4">
@@ -157,7 +157,7 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder={user.lastName || "Last Name"}
               value={user.lastName}
-              onChange={(e) => setUser({ ...user, lastName: e.target.value })}
+              onChange={(event) => setUser({ ...user, lastName: event.target.value })}
             />
           </div>
           <div className="mb-4">
@@ -171,7 +171,7 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder={user.email || "Email"}
               value={user.email}
-              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              onChange={(event) => setUser({ ...user, email: event.target.value })}
             />
           </div>
           <div className="mb-4">
@@ -185,7 +185,7 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder={user.password || "Password"}
               value={user.password}
-              onChange={(e) => setUser({ ...user, password: e.target.value })}
+              onChange={(event) => setUser({ ...user, password: event.target.value })}
             />
           </div>
           <div className="flex items-center justify-end">

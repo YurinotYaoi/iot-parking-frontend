@@ -6,7 +6,7 @@ interface Props {
   readonly data: CellData;
   readonly liveStatus?: string;
   readonly onClick: () => void;
-  readonly onRightClick?: (e: React.MouseEvent) => void;
+  readonly onRightClick?: (event: React.MouseEvent) => void;
 }
 
 const getCellContent = (
@@ -40,14 +40,14 @@ const getColor = (type: string, liveStatus: string | undefined) => {
 };
 
 export default function Cell({ data, liveStatus, onClick, onRightClick }: Props) {
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onRightClick?.(e);
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    onRightClick?.(event);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
       onClick();
     }
   };

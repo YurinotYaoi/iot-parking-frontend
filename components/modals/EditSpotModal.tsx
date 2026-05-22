@@ -153,7 +153,7 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
               id="slot-name"
               className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               value={slotName}
-              onChange={(e) => setSlotName(e.target.value)}
+              onChange={(event) => setSlotName(event.target.value)}
             />
           </div>
 
@@ -165,7 +165,7 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
               id="vehicle-type"
               className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               value={vehicleType}
-              onChange={(e) => setVehicleType(e.target.value)}
+              onChange={(event) => setVehicleType(event.target.value)}
             />
           </div>
 

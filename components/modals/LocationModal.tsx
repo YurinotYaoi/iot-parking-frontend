@@ -52,7 +52,7 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
               id="location-name"
               className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder="e.g., Main Parking Lot"
             />
           </div>
@@ -65,7 +65,7 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
               id="location-link"
               className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               value={link}
-              onChange={(e) => handleLinkChange(e.target.value)}
+              onChange={(event) => handleLinkChange(event.target.value)}
               placeholder="Paste iframe HTML or embed link"
             />
           </div>

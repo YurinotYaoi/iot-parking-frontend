@@ -43,9 +43,9 @@ export default function AvailableSpots({ placedSpotIds, onSelectSpot, currentLay
       
       const response = await res.json();
       setSpots(response.data || []);
-    } catch (err) {
-      console.error("Error fetching spots:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch spots");
+    } catch (error) {
+      console.error("Error fetching spots:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch spots");
     } finally {
       setLoading(false);
     }

@@ -42,8 +42,8 @@ export default function DashboardScreen() {
       try {
         const data = await getUser(firebaseUser.uid);
         setUser(data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
       } finally {
         setIsUserLoading(false);
       }

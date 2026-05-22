@@ -11,8 +11,12 @@ export async function POST(req) {
     if (missing) return errorResponse(missing, 400);
 
     // Validate email and password formats
-    if (!isValidEmail(body.email)) return errorResponse('Invalid email format', 400);
-    if (!isValidPassword(body.password)) return errorResponse('Password must be at least 6 characters', 400);
+    if (!isValidEmail(body.email)) {
+      return errorResponse({ message: 'Invalid email format', field: 'email' }, 400);
+    }
+    if (!isValidPassword(body.password)) {
+      return errorResponse({ message: 'Password must be at least 6 characters', field: 'password' }, 400);
+    }
 
     // Create user using Firebase Admin Auth
     const userRecord = await auth.createUser({
@@ -35,7 +39,10 @@ export async function POST(req) {
   } catch (err) {
     console.error('Register error:', err);
     if (err.code === 'auth/email-already-exists') {
-      return errorResponse('Email is already registered', 409);
+      return errorResponse({
+        message: 'Email is already registered',
+        field: 'email',
+      }, 409);
     }
     return errorResponse(err.message, 500);
   }

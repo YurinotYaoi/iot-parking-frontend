@@ -113,7 +113,7 @@ export default function CreateSensorModal({ onClose, preCreatedSlotId }: Props) 
     >
       <div
         className="bg-white p-6 rounded-xl w-[400px]"
-        onMouseDown={(e) => e.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <h2 className="text-xl font-semibold mb-4">Create Slot & Assign Sensor</h2>
 
@@ -121,28 +121,28 @@ export default function CreateSensorModal({ onClose, preCreatedSlotId }: Props) 
         <input
           className="w-full border p-2 rounded mb-2"
           value={slotName}
-          onChange={(e) => setSlotName(e.target.value)}
+          onChange={(event) => setSlotName(event.target.value)}
         />
 
         <label className="block mb-1 text-sm">Vehicle Type</label>
         <input
           className="w-full border p-2 rounded mb-2"
           value={vehicleType}
-          onChange={(e) => setVehicleType(e.target.value)}
+          onChange={(event) => setVehicleType(event.target.value)}
         />
 
         <label className="block mb-1 text-sm">Label</label>
         <input
           className="w-full border p-2 rounded mb-4"
           value={label}
-          onChange={(e) => setLabel(e.target.value)}
+          onChange={(event) => setLabel(event.target.value)}
         />
 
         <label className="block mb-2 text-sm">Select Sensor</label>
         <select
           className="w-full border p-2 rounded mb-4"
           value={selectedSensor}
-          onChange={(e) => setSelectedSensor(e.target.value)}
+          onChange={(event) => setSelectedSensor(event.target.value)}
         >
           <option value="">-- Select Sensor --</option>
           {sensors.map((sensor) => (

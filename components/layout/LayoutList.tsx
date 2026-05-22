@@ -37,9 +37,9 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
       const data = await getLayoutsByLot(lotId);
       setLayouts(data);
       setLastUpdated(new Date().toLocaleTimeString());
-    } catch (err) {
-      console.error("Error fetching layouts:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch layouts");
+    } catch (error) {
+      console.error("Error fetching layouts:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch layouts");
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -67,8 +67,8 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
             toast.success("Layout deleted!");
             fetchLayouts();
             onRefresh?.();
-          } catch (err) {
-            console.error("Error deleting layout:", err);
+          } catch (error) {
+            console.error("Error deleting layout:", error);
             toast.error("Failed to delete layout");
           }
         },
