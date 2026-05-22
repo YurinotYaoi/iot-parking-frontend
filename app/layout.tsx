@@ -26,6 +26,7 @@ export default function RootLayout({
           <Toaster />
           <Navbar />
           {children}
+          
         </ThemeProvider>
       </body>
     </html>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/configs/firebaseClient";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Spinner } from "@/components/Spinner";
 
 type Props = {
   onClose: () => void;
@@ -54,7 +56,7 @@ export default function CreateSensorModal({ onClose }: Props) {
 
   const handleCreateAndAssign = async () => {
     if (!slotName || !vehicleType || !selectedSensor) {
-      alert("Fill all fields and select a sensor");
+      toast.error("Fill all fields and select a sensor");
       return;
     }
 
@@ -124,10 +126,10 @@ export default function CreateSensorModal({ onClose }: Props) {
       const updatedSpot = await updateSpotRes.json();
       if (!updateSpotRes.ok) throw new Error(updatedSpot.message || "Failed to update spot status");
 
-      alert("Slot created & sensor assigned!");
+      toast.success("Slot created & sensor assigned!");
       onClose();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -174,7 +176,12 @@ export default function CreateSensorModal({ onClose }: Props) {
 
         <div className="flex justify-end gap-2">
           <Button className="shadow-md active:shadow-inner active:translate-y-px bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800  flex-1" onClick={handleCreateAndAssign} disabled={loading}>
-            {loading ? "Saving..." : "Create & Assign"}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner size="sm" label="Saving" />
+                Saving…
+              </span>
+            ) : "Create & Assign"}
           </Button>
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel

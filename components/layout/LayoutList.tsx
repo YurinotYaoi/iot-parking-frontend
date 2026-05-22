@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { getLayoutsByLot } from "@/services/layoutService";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
+import { toast } from "sonner";
+import { Skeleton } from "../Skeleton";
 
 interface Layout {
   layoutId: string;
@@ -23,13 +25,13 @@ interface Props {
 
 export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Props) {
   const [layouts, setLayouts] = useState<Layout[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchLayouts = async () => {
-    setLoading(true);
+  const fetchLayouts = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const data = await getLayoutsByLot(lotId);
@@ -39,13 +41,13 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
       console.error("Error fetching layouts:", error);
       setError(error instanceof Error ? error.message : "Failed to fetch layouts");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchLayouts();
-    const interval = setInterval(() => fetchLayouts(), 5000);
+    const interval = setInterval(() => fetchLayouts(false), 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lotId]);
@@ -54,18 +56,25 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
     router.push(`/dashboard/editlayout?id=${layoutId}`);
   };
 
-  const handleDelete = async (layoutId: string) => {
-    if (!confirm("Are you sure you want to delete this layout?")) return;
-
-    try {
-      const { deleteLayout } = await import("@/services/layoutService");
-      await deleteLayout(layoutId);
-      fetchLayouts(); // Refresh the list
-      onRefresh?.();
-    } catch (error) {
-      console.error("Error deleting layout:", error);
-      alert("Failed to delete layout");
-    }
+  const handleDelete = (layoutId: string) => {
+    toast("Delete this layout?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const { deleteLayout } = await import("@/services/layoutService");
+            await deleteLayout(layoutId);
+            toast.success("Layout deleted!");
+            fetchLayouts();
+            onRefresh?.();
+          } catch (error) {
+            console.error("Error deleting layout:", error);
+            toast.error("Failed to delete layout");
+          }
+        },
+      },
+      cancel: { label: "Cancel", onClick: () => {} },
+    });
   };
 
   const getTruncatedNotes = (notes: string | undefined): string => {
@@ -99,7 +108,21 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
       </div>
 
       {loading && (
-        <div className="p-4 text-center">Loading layouts...</div>
+        <div aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading layouts…</span>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="grid grid-cols-5 border-b">
+              <div className="p-3"><Skeleton className="h-5 w-24" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-16" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-20" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-20" /></div>
+              <div className="p-3 flex justify-center gap-2">
+                <Skeleton className="h-9 w-16" />
+                <Skeleton className="h-9 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {!loading && layouts.length === 0 && (

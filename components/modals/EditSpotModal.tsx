@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/configs/firebaseClient";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type SensorInfo = {
   sensorId: string;
@@ -45,7 +46,6 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
   const [columnNo, setColumnNo] = useState("");
   const [floor, setFloor] = useState("");
   const [saving, setSaving] = useState(false);
-  const [unassigning, setUnassigning] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -81,54 +81,12 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || "Failed to save slot");
 
+      toast.success("Slot saved successfully!");
       onSaved();
     } catch (error: any) {
-      alert(error.message || "Unable to save slot");
+      toast.error(error.message || "Unable to save slot");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleUnassign = async () => {
-    if (!spot.sensor?.sensorId) return;
-    setUnassigning(true);
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not logged in");
-      const token = await user.getIdToken();
-
-      const sensorRes = await fetch(`/api/sensors/${spot.sensor.sensorId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          spotId: "",
-          assigned: false,
-        }),
-      });
-      const sensorData = await sensorRes.json();
-      if (!sensorRes.ok) throw new Error(sensorData.error || sensorData.message || "Failed to unassign sensor");
-
-      const spotRes = await fetch(`/api/spots/${spot.slotId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          status: "available",
-        }),
-      });
-      const spotData = await spotRes.json();
-      if (!spotRes.ok) throw new Error(spotData.error || spotData.message || "Failed to update slot status");
-
-      onSaved();
-    } catch (error: any) {
-      alert(error.message || "Unable to unassign sensor");
-    } finally {
-      setUnassigning(false);
     }
   };
 
@@ -164,10 +122,11 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
       const deleteData = await deleteRes.json();
       if (!deleteRes.ok) throw new Error(deleteData.error || deleteData.message || "Failed to delete spot");
 
+      toast.success("Slot deleted successfully!");
       onSaved();
       onClose();
     } catch (error: any) {
-      alert(error.message || "Unable to delete spot");
+      toast.error(error.message || "Unable to delete spot");
     } finally {
       setDeleting(false);
     }
@@ -244,7 +203,7 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
             variant="destructive"
             className="w-full"
             onClick={handleDelete}
-            disabled={deleting || saving || unassigning}
+            disabled={deleting || saving}
           >
             {deleting ? "Deleting..." : "Delete slot"}
           </Button>
