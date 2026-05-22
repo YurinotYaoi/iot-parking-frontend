@@ -6,7 +6,7 @@
 //          /api/sensors/[sensorId]/ping
 // ============================================================
 
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/configs/firebase';
 import { updateSpotStatus } from './spotService';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { onValue, ref } from "firebase/database";
-import { rtdb } from "@/lib/firebaseClient";
+import { rtdb } from "@/lib/configs/firebaseClient";
 
 export type SensorData = {
   spotId?: string;

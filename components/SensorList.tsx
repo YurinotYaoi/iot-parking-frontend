@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebaseClient";
-import { Button } from "./ui/button";
+import { auth } from "@/lib/configs/firebaseClient";
+import { Button } from "@/components/ui/button";
 import EditSpotModal from "@/components/modals/EditSpotModal";
 
 type SensorInfo = {

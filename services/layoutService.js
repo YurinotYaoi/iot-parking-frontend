@@ -1,4 +1,4 @@
-import { auth } from '@/lib/firebaseClient';
+import { auth } from '@/lib/configs/firebaseClient';
 
 export async function getLayoutsByLot(lotId) {
   try {

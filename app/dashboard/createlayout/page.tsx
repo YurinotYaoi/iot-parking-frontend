@@ -8,7 +8,7 @@ import AvailableSpots from "@/components/layout/AvailableSpots";
 import { useGrid } from "@/hooks/useGrid";
 import { CellType, SpotData } from "@/models/layout";
 import { createLayout } from "@/services/layoutService";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/configs/firebaseClient";
 import { useSensorMap } from "@/hooks/useSensorMap";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"

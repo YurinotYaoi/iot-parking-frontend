@@ -1,6 +1,6 @@
 "use client";
 
-import ThemeToggle from "./ui/theme-toggle";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/services/logout";
 

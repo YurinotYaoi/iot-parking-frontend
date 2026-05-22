@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { use } from "react";
 
 const nextConfig: NextConfig = {
   webpack(config) {

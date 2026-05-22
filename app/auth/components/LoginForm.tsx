@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useEffect } from "react";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/configs/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
 
 const LoginForm = () => {

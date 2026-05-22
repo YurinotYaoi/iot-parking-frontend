@@ -1,5 +1,5 @@
 import type { UserProfile } from "@/models/user"
-import { auth } from "@/lib/firebaseClient"
+import { auth } from "@/lib/configs/firebaseClient"
 
 export async function getUser(uid: string): Promise<UserProfile> {
   const firebaseUser = auth.currentUser

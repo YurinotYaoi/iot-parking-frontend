@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/utils/withAuth";
 import { createSpot, getSpotsByOwner } from "@/services/spotService";
 import { getSensorBySpot } from "@/services/sensorService";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/configs/firebase";
 
 export const GET = withAuth(async (req: NextRequest) => {
   try {

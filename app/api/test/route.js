@@ -1,5 +1,5 @@
 // app/api/test/route.js
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/configs/firebase';
 import { NextResponse } from 'next/server';
 
 export async function GET() {

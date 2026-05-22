@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/configs/firebaseClient";
 
 type Props = {
   onClose: () => void;

@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/configs/firebase';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getAllParkingLots() {

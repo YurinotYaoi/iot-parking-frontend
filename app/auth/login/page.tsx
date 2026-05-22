@@ -1,5 +1,5 @@
 
-import LoginForm from "../components/LoginForm";
+import LoginForm from "@/auth/components/LoginForm";
 import type { Metadata } from "next"; 
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function LoginScreen() {
           Login Page
         </h1>
         <p className="py-4">
-          Dont have an account? <a href="/auth/signup"><u>Signup</u></a>
+          Don't have an account? <a href="/auth/signup"><u>Signup</u></a>
         </p>
         <LoginForm />
       </div>

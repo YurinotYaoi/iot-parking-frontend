@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/configs/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/utils/withAuth';
 import { NextResponse } from 'next/server';

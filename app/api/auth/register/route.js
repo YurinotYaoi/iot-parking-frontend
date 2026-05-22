@@ -1,4 +1,4 @@
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/configs/firebase';
 import { validateRequiredFields, isValidEmail, isValidPassword } from '@/utils/validate';
 import { successResponse, errorResponse } from '@/utils/response';
 

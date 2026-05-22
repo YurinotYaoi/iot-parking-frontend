@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { signOut, onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "@/lib/configs/firebaseClient";
 import { useRouter } from "next/navigation";
 import { IoLogOutOutline , IoSettings } from "react-icons/io5";
 import { FaMapLocationDot , FaTableList } from "react-icons/fa6";

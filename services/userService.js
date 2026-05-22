@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/configs/firebase';
+import { isValidEmail, isValidPassword } from '@/utils/validate';
 
 export async function getAllUsers() {
   const snapshot = await db.ref('users').once('value');
@@ -19,17 +20,36 @@ export async function updateUser(uid, updates) {
   for (const key of allowed) {
     if (updates[key] !== undefined) sanitized[key] = updates[key];
   }
+
+  // email and password live in Firebase Auth, not the Realtime DB.
+  // Build a separate payload for admin.auth().updateUser, and mirror email into the DB.
+  const authUpdates = {};
+  if (updates.email) {
+    if (!isValidEmail(updates.email)) throw new Error('Invalid email format');
+    authUpdates.email = updates.email;
+    sanitized.email = updates.email;
+  }
+  if (updates.password) {
+    if (!isValidPassword(updates.password)) {
+      throw new Error('Password must be at least 6 characters');
+    }
+    authUpdates.password = updates.password;
+  }
+
   sanitized.updatedAt = Date.now();
   await db.ref(`users/${uid}`).update(sanitized);
 
-  // Also update Firebase Auth displayName if name fields changed
-  if (updates.firstName || updates.lastName) {
+  if (updates.firstName || updates.middleName || updates.lastName) {
     const snapshot = await db.ref(`users/${uid}`).once('value');
     const user = snapshot.val();
-    const displayName = [user.firstName, user.middleName, user.lastName]
+    authUpdates.displayName = [user.firstName, user.middleName, user.lastName]
       .filter(Boolean).join(' ');
-    await admin.auth().updateUser(uid, { displayName });
   }
+
+  if (Object.keys(authUpdates).length > 0) {
+    await admin.auth().updateUser(uid, authUpdates);
+  }
+
   return { uid, ...sanitized };
 }
 
