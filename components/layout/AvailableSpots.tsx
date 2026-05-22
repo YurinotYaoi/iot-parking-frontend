@@ -82,7 +82,16 @@ export default function AvailableSpots({ placedSpotIds, onSelectSpot, currentLay
 
       <div className="max-h-43 overflow-y-auto border rounded bg-white dark:bg-slate-800 dark:border-slate-700">
         {loading && (
-          <div className="p-4 text-center text-gray-500 dark:text-slate-400">Loading spots...</div>
+          <div aria-busy="true" aria-live="polite">
+            <span className="sr-only">Loading spots…</span>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-3 border-b">
+                <Skeleton className="h-4 w-24 mb-1" />
+                <Skeleton className="h-3 w-40 mb-1" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            ))}
+          </div>
         )}
 
         {!loading && availableSpots.length === 0 && (

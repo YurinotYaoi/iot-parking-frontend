@@ -11,9 +11,11 @@ import { getLayoutById, updateLayout } from "@/services/layoutService";
 import { auth } from "@/lib/configs/firebaseClient";
 import { useSensorMap } from "@/hooks/useSensorMap";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/Skeleton";
+import { Spinner } from "@/components/Spinner";
 
 export default function EditLayoutPage() {
-    useEffect(() => {
+  useEffect(() => {
     document.title = "Edit Layout";
   }, []);
   const router = useRouter();
@@ -151,11 +153,80 @@ export default function EditLayoutPage() {
     }
   };
 
+  // ── Skeleton view: mirrors the real layout's structure ───────────────────
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center h-screen dark:bg-slate-950 dark:text-slate-100">
-        <div className="text-lg">Loading layout...</div>
-      </div>
+      <main
+        className="flex flex-col w-full items-center justify-center"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <span className="sr-only">Loading layout…</span>
+        <div className="w-screen max-w-600 flex-rows h-213">
+          <div className="p-2 flex flex-col gap-6 dark:text-slate-100 dark:bg-slate-950 h-213">
+            {/* Header skeleton */}
+            <div className="w-full flex border-2 border-gray-800 rounded-md p-1 justify-between items-center">
+              <Skeleton className="h-7 w-32 ml-2" />
+              <div className="flex gap-1">
+                <Skeleton className="h-9 w-20" />
+                <Skeleton className="h-9 w-32" />
+              </div>
+            </div>
+
+            <div className="flex gap-6 flex-1 overflow-hidden">
+              {/* LEFT skeleton — toolbar + grid */}
+              <div className="flex-1 flex flex-col gap-4 border-2 border-gray-800 rounded-md p-2">
+                <Skeleton className="h-10 w-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+                {/* Faux grid */}
+                <div className="grid grid-cols-8 gap-1">
+                  {Array.from({ length: 40 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square w-full" />
+                  ))}
+                </div>
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+
+              {/* RIGHT skeleton — control panel */}
+              <div className="w-80 flex flex-col gap-6">
+                <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700 space-y-4">
+                  <Skeleton className="h-5 w-28" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700 space-y-4">
+                  <Skeleton className="h-5 w-36" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-9 w-full" />
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700 space-y-3">
+                  <Skeleton className="h-5 w-32" />
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -181,6 +252,7 @@ export default function EditLayoutPage() {
               <Button
                 onClick={handleCancel}
                 variant="outline"
+                disabled={saving}
               >
                 Cancel
               </Button>
@@ -189,7 +261,14 @@ export default function EditLayoutPage() {
                 disabled={saving}
                 className="shadow-md active:shadow-inner active:translate-y-px px-6 py-2 bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-white disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner size="sm" label="Saving" />
+                    Saving…
+                  </span>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </div>
           </div>
@@ -200,9 +279,7 @@ export default function EditLayoutPage() {
             </div>
           )}
 
-          
           <div className="flex gap-6 flex-1 overflow-hidden ">
-            
             {/* LEFT - GRID AREA - TOOLBAR AND GRID */}
             <div className="flex-1 flex flex-col gap-4 overflow-hidden border-2 border-gray-800 rounded-md p-2">
               <Toolbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
