@@ -11,6 +11,7 @@ import { getLayoutById, updateLayout } from "@/services/layoutService";
 import { auth } from "@/lib/configs/firebaseClient";
 import { useSensorMap } from "@/hooks/useSensorMap";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/Skeleton";
 import { Spinner } from "@/components/Spinner";
 
@@ -137,7 +138,7 @@ export default function EditLayoutPage() {
 
       await updateLayout(layoutId, updates);
 
-      alert("Layout updated successfully!");
+      toast.success("Layout updated successfully!");
       router.push("/dashboard/layout");
     } catch (err) {
       console.error("Error saving layout:", err);
@@ -148,9 +149,10 @@ export default function EditLayoutPage() {
   };
 
   const handleCancel = () => {
-    if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost.")) {
-      router.push("/dashboard/layout");
-    }
+    toast("Unsaved changes will be lost.", {
+      action: { label: "Leave anyway", onClick: () => router.push("/dashboard/layout") },
+      cancel: { label: "Stay", onClick: () => {} },
+    });
   };
 
   // ── Skeleton view: mirrors the real layout's structure ───────────────────

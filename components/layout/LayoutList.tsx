@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getLayoutsByLot } from "@/services/layoutService";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
+import { toast } from "sonner";
 import { Skeleton } from "../Skeleton";
 
 interface Layout {
@@ -55,18 +56,25 @@ export default function LayoutList({ lotId = "default-lot-id", onRefresh }: Prop
     router.push(`/dashboard/editlayout?id=${layoutId}`);
   };
 
-  const handleDelete = async (layoutId: string) => {
-    if (!confirm("Are you sure you want to delete this layout?")) return;
-
-    try {
-      const { deleteLayout } = await import("@/services/layoutService");
-      await deleteLayout(layoutId);
-      fetchLayouts(); // Refresh the list
-      onRefresh?.();
-    } catch (err) {
-      console.error("Error deleting layout:", err);
-      alert("Failed to delete layout");
-    }
+  const handleDelete = (layoutId: string) => {
+    toast("Delete this layout?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const { deleteLayout } = await import("@/services/layoutService");
+            await deleteLayout(layoutId);
+            toast.success("Layout deleted!");
+            fetchLayouts();
+            onRefresh?.();
+          } catch (err) {
+            console.error("Error deleting layout:", err);
+            toast.error("Failed to delete layout");
+          }
+        },
+      },
+      cancel: { label: "Cancel", onClick: () => {} },
+    });
   };
 
   const getTruncatedNotes = (notes: string | undefined): string => {

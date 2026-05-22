@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
 
@@ -82,7 +83,7 @@ export default function SettingsPage() {
     const uid = authData.user?.uid;
 
     if (!uid) {
-      alert('User ID not found');
+      toast.error('User ID not found');
       setIsLoading(false);
       return;
     }
@@ -105,10 +106,10 @@ export default function SettingsPage() {
     if (response.ok && data.success) {
       // Update localStorage with new user data including password
       localStorage.setItem('flexpark_auth', JSON.stringify({ token, user: { ...data.data, password: user.password } }));
-      alert('Profile updated successfully');
+      toast.success('Profile updated successfully');
       router.push('/dashboard');
     } else {
-      alert(data.error || 'Failed to update profile');
+      toast.error(data.error || 'Failed to update profile');
     }
     setIsLoading(false);
   };
