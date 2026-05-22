@@ -130,7 +130,12 @@ const SignUpForm = () => {
         onClick={handleRegister}
         disabled={loading}
       >
-        {loading ? "Signing up..." : "Sign Up"}
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner size="sm" label="Signing up" />
+            Signing up…
+          </span>
+        ) : "Sign Up"}
       </button>
     </form>
   );

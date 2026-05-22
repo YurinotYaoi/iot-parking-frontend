@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useEffect } from "react";
 import { auth } from "@/lib/configs/firebaseClient";
 import { onAuthStateChanged } from "firebase/auth";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,9 +22,9 @@ const LoginForm = () => {
   return () => unsub();
   }, []);  
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
 
@@ -47,7 +47,6 @@ const LoginForm = () => {
       localStorage.setItem('flexpark_auth', JSON.stringify({ token, user: { ...data.data, password } }));
       
       router.push("/dashboard");
-      
     } catch (err: unknown) {
       console.log("LOGIN ERROR:", err);
 
@@ -60,6 +59,8 @@ const LoginForm = () => {
       } else {
         alert("Login failed");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,9 +92,15 @@ const LoginForm = () => {
 
       <button
         type="submit"
-        className="w-full rounded-md bg-blue-500 py-2 px-4 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4"
+        disabled={loading}
+        className="w-full rounded-md bg-blue-500 py-2 px-4 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-4 disabled:opacity-50"
       >
-        Login
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner size="sm" label="Logging in" />
+            Logging in…
+          </span>
+        ) : "Login"}
       </button>
     </form>
   );

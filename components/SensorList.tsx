@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { auth } from "@/lib/configs/firebaseClient";
 import { Button } from "@/components/ui/button";
 import EditSpotModal from "@/components/modals/EditSpotModal";
+import { Skeleton } from "@/components/Skeleton";
 
 type SensorInfo = {
   sensorId: string;
@@ -36,7 +37,7 @@ type SpotRow = {
 export default function SensorList() {
   const [spots, setSpots] = useState<SpotRow[]>([]);
   const [selectedSpot, setSelectedSpot] = useState<SpotRow | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const fetchSpots = async (showLoading = true) => {
@@ -98,7 +99,20 @@ export default function SensorList() {
       </div>
 
       {loading && (
-        <div className="col-span-7 p-4 text-center">Loading slots...</div>
+        <div aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading slots…</span>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="grid grid-cols-7 border-b">
+              <div className="p-3"><Skeleton className="h-5 w-20" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-24" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-8" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-8" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-16" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-5 w-20" /></div>
+              <div className="p-3 flex justify-center"><Skeleton className="h-8 w-full" /></div>
+            </div>
+          ))}
+        </div>
       )}
       {!loading && spots.length === 0 && (
         <div className="p-4 text-center">No slots found.</div>
