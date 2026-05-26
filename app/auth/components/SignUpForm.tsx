@@ -8,6 +8,14 @@ import { auth } from "@/lib/configs/firebaseClient";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
 
+type FormErrors = {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+  confirmPassword?: string;
+  form?: string;
+};
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -17,52 +25,53 @@ const SignUpForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const router = useRouter();
 
+  const clearFieldError = (field: keyof FormErrors) =>
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+
   const handleRegister = async () => {
-    if (!email || !firstName || !lastName || !password || !confirmPassword) {
-      toast.error("Please fill in all required fields.");
-      return;
-    }
+    const newErrors: FormErrors = {};
+    if (!email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      newErrors.email = "Enter a valid email address";
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          firstName,
-          middleName,
-          lastName,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, firstName, middleName, lastName }),
       });
 
       const data = await res.json();
 
       if (res.status === 409) {
-        toast.error("This email is already registered. Please log in instead.");
+        setErrors({ email: "This email is already registered. Please log in instead." });
         setLoading(false);
         return;
       }
 
       if (res.status < 200 || res.status >= 300) {
-        toast.error(data.message || "Registration failed. Please try again.");
+        setErrors({ form: data.message || "Registration failed. Please try again." });
         setLoading(false);
         return;
       }
@@ -86,22 +95,24 @@ const SignUpForm = () => {
         const firebaseErr = error as { code?: string };
         switch (firebaseErr.code) {
           case "auth/email-already-in-use":
-            toast.error("This email is already in use.");
-            break;
-          case "auth/invalid-email":
-            toast.error("Invalid email address.");
+            setErrors({ email: "This email is already in use." });
             break;
           case "auth/weak-password":
-            toast.error("Password is too weak. Use at least 6 characters.");
+            setErrors({ password: "Password is too weak. Use at least 6 characters." });
             break;
           case "auth/network-request-failed":
-            toast.error("Network error. Please check your connection.");
+            setErrors({ form: "Network error. Please check your connection." });
             break;
           default:
-            toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+            setErrors({
+              form:
+                error instanceof Error
+                  ? error.message
+                  : "Something went wrong. Please try again.",
+            });
         }
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        setErrors({ form: "An unexpected error occurred. Please try again." });
       }
 
       setLoading(false);
@@ -109,60 +120,128 @@ const SignUpForm = () => {
   };
 
   return (
-    <form className="flex flex-col">
-      <label htmlFor="email">Email</label>
-      <input
-        type="email"
-        id="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        disabled={loading}
-      />
+    <form className="flex flex-col gap-3">
+      {errors.form && (
+        <p className="flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <span aria-hidden="true">⚠</span> {errors.form}
+        </p>
+      )}
 
-      <label htmlFor="firstName">First Name</label>
-      <input
-        type="text"
-        id="firstName"
-        value={firstName}
-        onChange={(event) => setFirstName(event.target.value)}
-        disabled={loading}
-      />
+      <div className="space-y-1">
+        <label htmlFor="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearFieldError("email");
+          }}
+          disabled={loading}
+          aria-invalid={!!errors.email}
+          className={errors.email ? "border-destructive" : ""}
+        />
+        {errors.email && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.email}
+          </p>
+        )}
+      </div>
 
-      <label htmlFor="middleName">Middle Name</label>
-      <input
-        type="text"
-        id="middleName"
-        value={middleName}
-        onChange={(event) => setMiddleName(event.target.value)}
-        disabled={loading}
-      />
+      <div className="space-y-1">
+        <label htmlFor="firstName">First Name</label>
+        <input
+          type="text"
+          id="firstName"
+          value={firstName}
+          onChange={(event) => {
+            setFirstName(event.target.value);
+            clearFieldError("firstName");
+          }}
+          disabled={loading}
+          aria-invalid={!!errors.firstName}
+          className={errors.firstName ? "border-destructive" : ""}
+        />
+        {errors.firstName && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.firstName}
+          </p>
+        )}
+      </div>
 
-      <label htmlFor="lastName">Last Name</label>
-      <input
-        type="text"
-        id="lastName"
-        value={lastName}
-        onChange={(event) => setLastName(event.target.value)}
-        disabled={loading}
-      />
+      <div className="space-y-1">
+        <label htmlFor="middleName">Middle Name</label>
+        <input
+          type="text"
+          id="middleName"
+          value={middleName}
+          onChange={(event) => setMiddleName(event.target.value)}
+          disabled={loading}
+        />
+      </div>
 
-      <label htmlFor="password">Password</label>
-      <input
-        type="password"
-        id="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        disabled={loading}
-      />
+      <div className="space-y-1">
+        <label htmlFor="lastName">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          value={lastName}
+          onChange={(event) => {
+            setLastName(event.target.value);
+            clearFieldError("lastName");
+          }}
+          disabled={loading}
+          aria-invalid={!!errors.lastName}
+          className={errors.lastName ? "border-destructive" : ""}
+        />
+        {errors.lastName && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.lastName}
+          </p>
+        )}
+      </div>
 
-      <label htmlFor="confirmPassword">Confirm Password</label>
-      <input
-        type="password"
-        id="confirmPassword"
-        value={confirmPassword}
-        onChange={(event) => setConfirmPassword(event.target.value)}
-        disabled={loading}
-      />
+      <div className="space-y-1">
+        <label htmlFor="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          value={password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearFieldError("password");
+          }}
+          disabled={loading}
+          aria-invalid={!!errors.password}
+          className={errors.password ? "border-destructive" : ""}
+        />
+        {errors.password && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.password}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          value={confirmPassword}
+          onChange={(event) => {
+            setConfirmPassword(event.target.value);
+            clearFieldError("confirmPassword");
+          }}
+          disabled={loading}
+          aria-invalid={!!errors.confirmPassword}
+          className={errors.confirmPassword ? "border-destructive" : ""}
+        />
+        {errors.confirmPassword && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.confirmPassword}
+          </p>
+        )}
+      </div>
 
       <button
         type="button"
@@ -175,7 +254,9 @@ const SignUpForm = () => {
             <Spinner size="sm" label="Signing up" />
             Signing up…
           </span>
-        ) : "Sign Up"}
+        ) : (
+          "Sign Up"
+        )}
       </button>
     </form>
   );

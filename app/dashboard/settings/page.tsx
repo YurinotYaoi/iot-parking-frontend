@@ -15,6 +15,16 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState({ firstName: '', lastName: '', middleName: '', email: '', password: '' });
 
+  type FormErrors = {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    form?: string;
+  };
+  const [errors, setErrors] = useState<FormErrors>({});
+  const clearFieldError = (field: keyof FormErrors) =>
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+
   useEffect(() => {
     // First, try to get user data from localStorage and set it immediately
     const authData = JSON.parse(localStorage.getItem('flexpark_auth') || '{}');
@@ -77,13 +87,27 @@ export default function SettingsPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    const newErrors: FormErrors = {};
+    if (!user.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!user.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!user.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email))
+      newErrors.email = "Enter a valid email address";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setIsLoading(true);
     const authData = JSON.parse(localStorage.getItem('flexpark_auth') || '{}');
     const token = authData.token;
     const uid = authData.user?.uid;
 
     if (!uid) {
-      toast.error('User ID not found');
+      setErrors({ form: 'User ID not found' });
       setIsLoading(false);
       return;
     }
@@ -109,7 +133,7 @@ export default function SettingsPage() {
       toast.success('Profile updated successfully');
       router.push('/dashboard');
     } else {
-      toast.error(data.error || 'Failed to update profile');
+      setErrors({ form: data.error || 'Failed to update profile' });
     }
     setIsLoading(false);
   };
@@ -118,6 +142,12 @@ export default function SettingsPage() {
     <div className="flex flex-col items-center justify-center h-screen">      
       <div className="w-full max-w-md">
         <form onSubmit={handleSubmit}>
+          {errors.form && (
+            <p className="mb-4 flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <span aria-hidden="true">⚠</span> {errors.form}
+            </p>
+          )}
+
           <div className="mb-4">
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
               First Name
@@ -126,11 +156,17 @@ export default function SettingsPage() {
               type="text"
               name="firstName"
               id="firstName"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm ${errors.firstName ? "border-destructive" : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"}`}
               placeholder={user.firstName || "First Name"}
               value={user.firstName}
-              onChange={(event) => setUser({ ...user, firstName: event.target.value })}
+              aria-invalid={!!errors.firstName}
+              onChange={(event) => { setUser({ ...user, firstName: event.target.value }); clearFieldError("firstName"); }}
             />
+            {errors.firstName && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.firstName}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="middleName" className="block text-sm font-medium text-gray-700">
@@ -154,11 +190,17 @@ export default function SettingsPage() {
               type="text"
               name="lastName"
               id="lastName"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm ${errors.lastName ? "border-destructive" : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"}`}
               placeholder={user.lastName || "Last Name"}
               value={user.lastName}
-              onChange={(event) => setUser({ ...user, lastName: event.target.value })}
+              aria-invalid={!!errors.lastName}
+              onChange={(event) => { setUser({ ...user, lastName: event.target.value }); clearFieldError("lastName"); }}
             />
+            {errors.lastName && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.lastName}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -168,11 +210,17 @@ export default function SettingsPage() {
               type="email"
               name="email"
               id="email"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm ${errors.email ? "border-destructive" : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"}`}
               placeholder={user.email || "Email"}
               value={user.email}
-              onChange={(event) => setUser({ ...user, email: event.target.value })}
+              aria-invalid={!!errors.email}
+              onChange={(event) => { setUser({ ...user, email: event.target.value }); clearFieldError("email"); }}
             />
+            {errors.email && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.email}
+              </p>
+            )}
           </div>
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">

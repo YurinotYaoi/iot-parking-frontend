@@ -13,8 +13,15 @@ type Props = {
 type Sensor = {
   sensorId: string;
   deviceId: string;
-  name: string; // unique sensor name
+  name: string;
   spotId?: string;
+};
+
+type FormErrors = {
+  slotName?: string;
+  vehicleType?: string;
+  selectedSensor?: string;
+  form?: string;
 };
 
 export default function CreateSensorModal({ onClose }: Props) {
@@ -23,6 +30,10 @@ export default function CreateSensorModal({ onClose }: Props) {
   const [vehicleType, setVehicleType] = useState("");
   const [selectedSensor, setSelectedSensor] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const clearFieldError = (field: keyof FormErrors) =>
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
 
   // Grid values will be assigned later by layout management
   const rowNo = undefined;
@@ -55,12 +66,18 @@ export default function CreateSensorModal({ onClose }: Props) {
   }, []);
 
   const handleCreateAndAssign = async () => {
-    if (!slotName || !vehicleType || !selectedSensor) {
-      toast.error("Fill all fields and select a sensor");
+    const newErrors: FormErrors = {};
+    if (!slotName.trim()) newErrors.slotName = "Slot name is required";
+    if (!vehicleType.trim()) newErrors.vehicleType = "Vehicle type is required";
+    if (!selectedSensor) newErrors.selectedSensor = "Please select a sensor";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
       const user = auth.currentUser;
@@ -82,7 +99,7 @@ export default function CreateSensorModal({ onClose }: Props) {
           layoutId,
           lotId,
           floor,
-          ownerId: user.uid, // assign to current user
+          ownerId: user.uid,
         }),
       });
 
@@ -109,9 +126,9 @@ export default function CreateSensorModal({ onClose }: Props) {
       if (!assignRes.ok) throw new Error(assignedSensor.message || "Failed to assign sensor");
 
       // Sync spot status to match sensor status
-      const sensorStatus = assignedSensor.data?.status || 'online';
-      const spotStatus = sensorStatus === 'offline' ? 'occupied' : 'available';
-      
+      const sensorStatus = assignedSensor.data?.status || "online";
+      const spotStatus = sensorStatus === "offline" ? "occupied" : "available";
+
       const updateSpotRes = await fetch(`/api/spots/${spotId}`, {
         method: "PATCH",
         headers: {
@@ -124,12 +141,13 @@ export default function CreateSensorModal({ onClose }: Props) {
       });
 
       const updatedSpot = await updateSpotRes.json();
-      if (!updateSpotRes.ok) throw new Error(updatedSpot.message || "Failed to update spot status");
+      if (!updateSpotRes.ok)
+        throw new Error(updatedSpot.message || "Failed to update spot status");
 
       toast.success("Slot created & sensor assigned!");
       onClose();
     } catch (error: any) {
-      toast.error(error.message);
+      setErrors({ form: error.message || "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -146,42 +164,81 @@ export default function CreateSensorModal({ onClose }: Props) {
       >
         <h2 className="text-xl font-semibold mb-4">Create Slot & Assign Sensor</h2>
 
-        <label className="block mb-1 text-sm text-slate-700 dark:text-slate-200">Slot Name</label>
-        <input
-          className="w-full border border-slate-300 bg-white p-2 rounded mb-2 text-slate-900 outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          value={slotName}
-          onChange={(event) => setSlotName(event.target.value)}
-        />
+        {errors.form && (
+          <p className="mb-4 flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.form}
+          </p>
+        )}
 
-        <label className="block mb-1 text-sm text-slate-700 dark:text-slate-200">Vehicle Type</label>
-        <input
-          className="w-full border border-slate-300 bg-white p-2 rounded mb-4 text-slate-900 outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          value={vehicleType}
-          onChange={(event) => setVehicleType(event.target.value)}
-        />
+        <div className="mb-2">
+          <label htmlFor="slot-name" className="block mb-1 text-sm text-slate-700 dark:text-slate-200">Slot Name</label>
+          <input
+            id="slot-name"
+            className={`w-full border p-2 rounded text-slate-900 outline-none transition bg-white dark:bg-slate-800 dark:text-slate-100 ${errors.slotName ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
+            value={slotName}
+            aria-invalid={!!errors.slotName}
+            onChange={(event) => { setSlotName(event.target.value); clearFieldError("slotName"); }}
+          />
+          {errors.slotName && (
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+              <span aria-hidden="true">⚠</span> {errors.slotName}
+            </p>
+          )}
+        </div>
 
-        <label className="block mb-2 text-sm text-slate-700 dark:text-slate-200">Select Sensor</label>
-        <select
-          className="w-full border border-slate-300 bg-white p-2 mb-4 rounded text-slate-900 outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          value={selectedSensor}
-          onChange={(event) => setSelectedSensor(event.target.value)}
-        >
-          <option value="">-- Select Sensor --</option>
-          {sensors.map((s) => (
-            <option key={s.sensorId} value={s.sensorId}>
-              {s.name ? `${s.name} (${s.sensorId})` : `${s.deviceId} (${s.sensorId})`}
-            </option>
-          ))}
-        </select>
+        <div className="mb-2">
+          <label htmlFor="vehicle-type" className="block mb-1 text-sm text-slate-700 dark:text-slate-200">Vehicle Type</label>
+          <input
+            id="vehicle-type"
+            className={`w-full border p-2 rounded text-slate-900 outline-none transition bg-white dark:bg-slate-800 dark:text-slate-100 ${errors.vehicleType ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
+            value={vehicleType}
+            aria-invalid={!!errors.vehicleType}
+            onChange={(event) => { setVehicleType(event.target.value); clearFieldError("vehicleType"); }}
+          />
+          {errors.vehicleType && (
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+              <span aria-hidden="true">⚠</span> {errors.vehicleType}
+            </p>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="select-sensor" className="block mb-2 text-sm text-slate-700 dark:text-slate-200">Select Sensor</label>
+          <select
+            id="select-sensor"
+            className={`w-full border p-2 mb-1 rounded text-slate-900 outline-none transition bg-white dark:bg-slate-800 dark:text-slate-100 ${errors.selectedSensor ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
+            value={selectedSensor}
+            aria-invalid={!!errors.selectedSensor}
+            onChange={(event) => { setSelectedSensor(event.target.value); clearFieldError("selectedSensor"); }}
+          >
+            <option value="">-- Select Sensor --</option>
+            {sensors.map((s) => (
+              <option key={s.sensorId} value={s.sensorId}>
+                {s.name ? `${s.name} (${s.sensorId})` : `${s.deviceId} (${s.sensorId})`}
+              </option>
+            ))}
+          </select>
+          {errors.selectedSensor && (
+            <p className="flex items-center gap-1.5 text-sm text-destructive">
+              <span aria-hidden="true">⚠</span> {errors.selectedSensor}
+            </p>
+          )}
+        </div>
 
         <div className="flex justify-end gap-2">
-          <Button className="shadow-md active:shadow-inner active:translate-y-px bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800  flex-1" onClick={handleCreateAndAssign} disabled={loading}>
+          <Button
+            className="shadow-md active:shadow-inner active:translate-y-px bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800 flex-1"
+            onClick={handleCreateAndAssign}
+            disabled={loading}
+          >
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <Spinner size="sm" label="Saving" />
                 Saving…
               </span>
-            ) : "Create & Assign"}
+            ) : (
+              "Create & Assign"
+            )}
           </Button>
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
