@@ -82,6 +82,7 @@ const SignUpForm = () => {
       localStorage.setItem("authToken", token);
       localStorage.setItem("userId", userCredential.user.uid);
 
+
       toast.success("Account created successfully! Redirecting...");
 
       setTimeout(() => {

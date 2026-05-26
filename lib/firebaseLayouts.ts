@@ -1,4 +1,4 @@
-import { db } from "./firebaseClient";
+import { db } from "./configs/firebaseClient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export const saveLayout = async (layoutId: string, grid: any) => {
