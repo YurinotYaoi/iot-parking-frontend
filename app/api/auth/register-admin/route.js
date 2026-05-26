@@ -1,4 +1,4 @@
-import { registerUser } from '@/services/authService';
+// import { registerUser } from '@/services/authService';
 import { db } from '@/lib/configs/firebase';
 import { successResponse, errorResponse } from '@/utils/response';
 

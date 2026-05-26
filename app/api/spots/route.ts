@@ -6,7 +6,7 @@ import { db } from "@/lib/configs/firebase";
 
 export const GET = withAuth(async (req: NextRequest) => {
   try {
-    const spots = await getSpotsByOwner(req.user.uid);
+    const spots = await getSpotsByOwner((req as NextRequest & { user: { uid: string } }).user.uid);
     const spotsWithSensor = await Promise.all(
       spots.map(async (spot) => {
         const sensor = await getSensorBySpot(spot.slotId);

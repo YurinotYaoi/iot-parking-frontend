@@ -5,6 +5,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/configs/firebaseClient";
+import { toast } from "sonner";
+import { Spinner } from "@/components/Spinner";
+
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -69,6 +72,7 @@ const SignUpForm = () => {
 
       localStorage.setItem("authToken", token);
       localStorage.setItem("userId", userCredential.user.uid);
+
 
       toast.success("Account created successfully! Redirecting...");
 

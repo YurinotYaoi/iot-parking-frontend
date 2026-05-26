@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/configs/firebaseClient";
 import { SpotData } from "@/models/layout";
+import { Skeleton } from "@/components/Skeleton";
+
 
 interface SpotWithLayoutInfo extends SpotData {
   layoutInfo?: {
