@@ -64,6 +64,7 @@ export default function DashboardScreen() {
     }
   };
 
+  //helper functions
   const openCSModal = () => setShowCSModal(true);
   const closeCSModal = () => setShowCSModal(false);
   const openLocationModal = () => setShowLocationModal(true);
@@ -176,6 +177,13 @@ export default function DashboardScreen() {
               >
                 Layouts
                 <FaTableList />
+              </Button>
+
+              <Button
+                className="shadow-md active:shadow-inner active:translate-y-px rounded-sm mr-1 bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800"
+                onClick={() => router.push("/dashboard/sensorHistory")}
+              >
+                Sensor History (Development)
               </Button>
             </div>
 

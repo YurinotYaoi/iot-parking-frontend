@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/Skeleton";
 import { Spinner } from "@/components/Spinner";
+import SensorSimulate from "@/components/layout/SensorSimulate";
 
 export default function EditLayoutPage() {
   useEffect(() => {
@@ -306,7 +307,7 @@ export default function EditLayoutPage() {
             </div>
 
             {/* RIGHT - CONTROL PANEL */}
-            <div className="w-80 flex flex-col gap-6 overflow-y-auto dark:text-slate-100">
+            <div className="w-80 flex-col gap-6 overflow-y-auto dark:text-slate-100">
               {/* LAYOUT INFO */}
               <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700">
                 <h2 className="font-semibold mb-4 dark:text-slate-100">Layout Info</h2>
@@ -384,6 +385,18 @@ export default function EditLayoutPage() {
                   </div>
                 )}
               </div>
+
+              {/* TESTING CODE (DEVELOPMENT PURPOSE) */}
+              <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700 flex-1 overflow-hidden flex flex-col">
+                <h2 className="font-semibold mb-4 dark:text-slate-100">Toggle Buttons to Simulate Sensors (Development Purpose)</h2>
+                <SensorSimulate />
+
+              
+              </div>
+
+
+
+
             </div>
           </div>
         </div>
