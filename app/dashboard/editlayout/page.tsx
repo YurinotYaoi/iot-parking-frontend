@@ -41,6 +41,7 @@ export default function EditLayoutPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const { sensorMap } = useSensorMap();
 
   const placedSpots = getPlacedSpots();
@@ -111,7 +112,7 @@ export default function EditLayoutPage() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setError("Layout name is required");
+      setNameError("Layout name is required");
       return;
     }
 
@@ -318,10 +319,16 @@ export default function EditLayoutPage() {
                     <input
                       id="layout-name"
                       value={name}
-                      onChange={(event) => setName(event.target.value)}
+                      onChange={(event) => { setName(event.target.value); setNameError(null); }}
                       placeholder="Enter layout name"
-                      className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                      aria-invalid={!!nameError}
+                      className={`w-full rounded-md border p-2 text-sm text-slate-900 shadow-sm outline-none transition dark:bg-slate-800 dark:text-slate-100 ${nameError ? "border-destructive" : "border-slate-300 bg-white focus:border-slate-500 dark:border-slate-700"}`}
                     />
+                    {nameError && (
+                      <p className="flex items-center gap-1.5 text-sm text-destructive mt-1">
+                        <span aria-hidden="true">⚠</span> {nameError}
+                      </p>
+                    )}
                   </div>
 
                   <div>

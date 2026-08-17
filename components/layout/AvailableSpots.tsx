@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/configs/firebaseClient";
 import { SpotData } from "@/models/layout";
 import { Skeleton } from "@/components/Skeleton";
-
 
 interface SpotWithLayoutInfo extends SpotData {
   layoutInfo?: {
@@ -27,7 +27,10 @@ export default function AvailableSpots({ placedSpotIds, onSelectSpot, currentLay
     setLoading(true);
     setError(null);
     try {
-      const user = auth.currentUser;
+      const user = await new Promise<typeof auth.currentUser>((resolve) => {
+        if (auth.currentUser) { resolve(auth.currentUser); return; }
+        const unsub = onAuthStateChanged(auth, (u) => { unsub(); resolve(u); });
+      });
       if (!user) {
         setError("Not authenticated");
         setLoading(false);

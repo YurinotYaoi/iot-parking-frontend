@@ -10,12 +10,21 @@ type Props = {
   initialLink?: string;
 };
 
+type FormErrors = {
+  name?: string;
+  link?: string;
+};
+
 export default function LocationModal({ onClose, onSave, initialName = "", initialLink = "" }: Props) {
   const [name, setName] = useState(initialName);
   const [link, setLink] = useState(initialLink);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const clearFieldError = (field: keyof FormErrors) =>
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
 
   const extractEmbedSrc = (input: string) => {
-    if (input.startsWith('<iframe')) {
+    if (input.startsWith("<iframe")) {
       const match = input.match(/src="([^"]+)"/);
       return match ? match[1] : input;
     }
@@ -24,9 +33,19 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
 
   const handleLinkChange = (value: string) => {
     setLink(extractEmbedSrc(value));
+    clearFieldError("link");
   };
 
   const handleSave = () => {
+    const newErrors: FormErrors = {};
+    if (!name.trim()) newErrors.name = "Location name is required";
+    if (!link.trim()) newErrors.link = "Google Maps embed is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     onSave(name, link);
     onClose();
   };
@@ -50,11 +69,17 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
             </label>
             <input
               id="location-name"
-              className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className={`w-full rounded-md border p-2 text-sm text-slate-900 shadow-sm outline-none transition dark:bg-slate-800 dark:text-slate-100 ${errors.name ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              aria-invalid={!!errors.name}
+              onChange={(event) => { setName(event.target.value); clearFieldError("name"); }}
               placeholder="e.g., Main Parking Lot"
             />
+            {errors.name && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.name}
+              </p>
+            )}
           </div>
 
           <div>
@@ -63,20 +88,27 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
             </label>
             <input
               id="location-link"
-              className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className={`w-full rounded-md border p-2 text-sm text-slate-900 shadow-sm outline-none transition dark:bg-slate-800 dark:text-slate-100 ${errors.link ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
               value={link}
+              aria-invalid={!!errors.link}
               onChange={(event) => handleLinkChange(event.target.value)}
               placeholder="Paste iframe HTML or embed link"
             />
+            {errors.link && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.link}
+              </p>
+            )}
           </div>
 
           {link && (
             <div>
-              <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+              <p className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
                 Preview
-              </label>
+              </p>
               <iframe
                 src={link}
+                title="Google Maps location preview"
                 width="100%"
                 height="200"
                 style={{ border: 0 }}
@@ -90,7 +122,10 @@ export default function LocationModal({ onClose, onSave, initialName = "", initi
         </div>
 
         <div className="mt-6 flex gap-3">
-          <Button className="flex-1 shadow-md active:shadow-inner active:translate-y-px bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800 " onClick={handleSave}>
+          <Button
+            className="flex-1 shadow-md active:shadow-inner active:translate-y-px bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800"
+            onClick={handleSave}
+          >
             Save Location
           </Button>
           <Button variant="outline" className="flex-1" onClick={onClose}>

@@ -1,8 +1,16 @@
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/configs/firebaseClient';
+
+function getAuthUser() {
+  return new Promise((resolve) => {
+    if (auth.currentUser) { resolve(auth.currentUser); return; }
+    const unsub = onAuthStateChanged(auth, (user) => { unsub(); resolve(user); });
+  });
+}
 
 export async function getLayoutsByLot(lotId) {
   try {
-    const user = auth.currentUser;
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
 
     const token = await user.getIdToken();
@@ -21,7 +29,7 @@ export async function getLayoutsByLot(lotId) {
 
 export async function getLayoutById(layoutId) {
   try {
-    const user = auth.currentUser;
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
 
     const token = await user.getIdToken();
@@ -40,7 +48,7 @@ export async function getLayoutById(layoutId) {
 
 export async function createLayout(lotId, data) {
   try {
-    const user = auth.currentUser;
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
 
     const token = await user.getIdToken();
@@ -72,7 +80,7 @@ export async function createLayout(lotId, data) {
 
 export async function updateLayout(layoutId, updates) {
   try {
-    const user = auth.currentUser;
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
 
     const token = await user.getIdToken();
@@ -99,7 +107,7 @@ export async function updateLayout(layoutId, updates) {
 
 export async function deleteLayout(layoutId) {
   try {
-    const user = auth.currentUser;
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
 
     const token = await user.getIdToken();

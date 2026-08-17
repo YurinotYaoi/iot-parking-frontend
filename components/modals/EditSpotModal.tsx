@@ -39,6 +39,12 @@ type Props = {
   onSaved: () => void;
 };
 
+type FormErrors = {
+  slotName?: string;
+  vehicleType?: string;
+  form?: string;
+};
+
 const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
   const [slotName, setSlotName] = useState("");
   const [vehicleType, setVehicleType] = useState("any");
@@ -47,6 +53,10 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
   const [floor, setFloor] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const clearFieldError = (field: keyof FormErrors) =>
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
 
   useEffect(() => {
     if (!spot) return;
@@ -55,12 +65,24 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
     setRowNo(spot.rowNo || "");
     setColumnNo(spot.columnNo || "");
     setFloor(spot.floor || "");
+    setErrors({});
   }, [spot]);
 
   if (!spot) return null;
 
   const handleSave = async () => {
+    const newErrors: FormErrors = {};
+    if (!slotName.trim()) newErrors.slotName = "Slot name is required";
+    if (!vehicleType.trim()) newErrors.vehicleType = "Vehicle type is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setSaving(true);
+    setErrors({});
+
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("Not logged in");
@@ -84,7 +106,7 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
       toast.success("Slot saved successfully!");
       onSaved();
     } catch (error: any) {
-      toast.error(error.message || "Unable to save slot");
+      setErrors({ form: error.message || "Unable to save slot" });
     } finally {
       setSaving(false);
     }
@@ -110,7 +132,8 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
           }),
         });
         const sensorData = await sensorRes.json();
-        if (!sensorRes.ok) throw new Error(sensorData.error || sensorData.message || "Failed to unassign sensor");
+        if (!sensorRes.ok)
+          throw new Error(sensorData.error || sensorData.message || "Failed to unassign sensor");
       }
 
       const deleteRes = await fetch(`/api/spots/${spot.slotId}`, {
@@ -120,7 +143,8 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
         },
       });
       const deleteData = await deleteRes.json();
-      if (!deleteRes.ok) throw new Error(deleteData.error || deleteData.message || "Failed to delete spot");
+      if (!deleteRes.ok)
+        throw new Error(deleteData.error || deleteData.message || "Failed to delete spot");
 
       toast.success("Slot deleted successfully!");
       onSaved();
@@ -144,6 +168,12 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
       <div className="relative bg-white p-6 rounded-xl shadow-xl dark:bg-slate-900 dark:text-slate-100" style={{ width: 420 }}>
         <h2 className="text-xl font-semibold mb-4">Edit Slot</h2>
 
+        {errors.form && (
+          <p className="mb-4 flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <span aria-hidden="true">⚠</span> {errors.form}
+          </p>
+        )}
+
         <div className="space-y-4">
           <div>
             <label htmlFor="slot-name" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -151,10 +181,16 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
             </label>
             <input
               id="slot-name"
-              className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className={`w-full rounded-md border p-2 text-sm text-slate-900 shadow-sm outline-none transition dark:bg-slate-800 dark:text-slate-100 ${errors.slotName ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
               value={slotName}
-              onChange={(event) => setSlotName(event.target.value)}
+              aria-invalid={!!errors.slotName}
+              onChange={(event) => { setSlotName(event.target.value); clearFieldError("slotName"); }}
             />
+            {errors.slotName && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.slotName}
+              </p>
+            )}
           </div>
 
           <div>
@@ -163,10 +199,16 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
             </label>
             <input
               id="vehicle-type"
-              className="w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className={`w-full rounded-md border p-2 text-sm text-slate-900 shadow-sm outline-none transition dark:bg-slate-800 dark:text-slate-100 ${errors.vehicleType ? "border-destructive" : "border-slate-300 focus:border-slate-500 dark:border-slate-700"}`}
               value={vehicleType}
-              onChange={(event) => setVehicleType(event.target.value)}
+              aria-invalid={!!errors.vehicleType}
+              onChange={(event) => { setVehicleType(event.target.value); clearFieldError("vehicleType"); }}
             />
+            {errors.vehicleType && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-destructive">
+                <span aria-hidden="true">⚠</span> {errors.vehicleType}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-3 text-sm text-slate-700 dark:text-slate-300">
@@ -195,7 +237,11 @@ const EditSpotModal = ({ spot, onClose, onSaved }: Props) => {
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
-          <Button className="shadow-md active:shadow-inner active:translate-y-px w-full bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800 " onClick={handleSave} disabled={saving}>
+          <Button
+            className="shadow-md active:shadow-inner active:translate-y-px w-full bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent dark:bg-white dark:text-black dark:hover:bg-slate-800 dark:hover:text-white dark:hover:border-slate-800"
+            onClick={handleSave}
+            disabled={saving}
+          >
             {saving ? "Saving..." : "Save changes"}
           </Button>
 
