@@ -1,5 +1,4 @@
 import { withAuth } from "@/utils/withAuth";
-import { getLayoutById } from "@/services/layoutService";
 import { successResponse, errorResponse } from "@/utils/response";
 import { db } from "@/lib/configs/firebase";
 
@@ -8,12 +7,9 @@ import { db } from "@/lib/configs/firebase";
 export const GET = withAuth(async (req) => {
   try {
 
-    //get the searchParams from the request URL
     const { searchParams } = new URL(req.url);
-    //get the layoutId from the searchParams
     const layoutId = searchParams.get("layoutId");
 
-    //no layoutId provided, return error
     if (!layoutId) {
       return errorResponse("layoutId is required", 400);
     }
