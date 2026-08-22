@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import SensorHistory from "@/components/layout/SensorHistory";
+import SensorHistory, { HistoryEntry } from "@/components/layout/SensorHistory";
 import { Spinner } from "@/components/Spinner";
 import { auth } from "@/lib/configs/firebaseClient";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,6 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import {
   AUTO_CAPTURE_MS,
   getAutoCaptureState,
-  getSecondsUntilNextCapture,
   startAutoCapture,
   stopAutoCapture,
 } from "@/lib/sensorHistoryAutoCapture";
@@ -18,6 +17,67 @@ import {
 interface LayoutOption {
   layoutId: string;
   layoutName: string;
+}
+
+interface AiPrediction {
+  predictedOccupancy: number;
+  predictedAvailableSlots: number;
+  horizonMinutes: number;
+  trainingRecords: number;
+  metrics: {
+    mae: number;
+    rmse: number;
+    r2: number | null;
+  };
+}
+
+function buildHistoryReport(history: HistoryEntry[]) {
+  const records = history
+    .filter((entry) => typeof entry.timestamp === "number" && typeof entry.occupancyRate === "number")
+    .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+
+  if (!records.length) return null;
+
+  const latest = records.at(-1)!;
+  const latestOccupancy = Math.max(0, Math.min(1, latest.occupancyRate ?? 0));
+  const recent = records.slice(-3).map((entry) => entry.occupancyRate ?? 0);
+  const previous = records.slice(-6, -3).map((entry) => entry.occupancyRate ?? 0);
+  const recentAverage = recent.reduce((sum, value) => sum + value, 0) / recent.length;
+  const previousAverage = previous.length
+    ? previous.reduce((sum, value) => sum + value, 0) / previous.length
+    : recentAverage;
+  const changePerRecord = recentAverage - previousAverage;
+  const projectedOccupancy = Math.max(0, Math.min(1, latestOccupancy + changePerRecord * 2));
+
+  const hourly = new Map<number, number[]>();
+  records.forEach((entry) => {
+    if (typeof entry.hour === "number") {
+      hourly.set(entry.hour, [...(hourly.get(entry.hour) ?? []), entry.occupancyRate ?? 0]);
+    }
+  });
+  const peak = [...hourly.entries()].sort((a, b) => {
+    const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+    return average(b[1]) - average(a[1]);
+  })[0];
+  const peakHour = peak?.[0] ?? latest.hour ?? 0;
+  const peakOccupancy = peak
+    ? peak[1].reduce((sum, value) => sum + value, 0) / peak[1].length
+    : latestOccupancy;
+  let trend = "stable";
+  if (changePerRecord > 0.02) trend = "rising";
+  if (changePerRecord < -0.02) trend = "falling";
+  const totalSlots = latest.totalSlots ?? 0;
+
+  return {
+    latestOccupancy,
+    latestAvailable: latest.vacantSlots ?? Math.max(0, totalSlots - (latest.occupiedSlots ?? 0)),
+    projectedOccupancy,
+    projectedAvailable: Math.max(0, Math.round(totalSlots * (1 - projectedOccupancy))),
+    peakHour: new Date(2020, 0, 1, peakHour).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+    peakOccupancy,
+    trend,
+    sampleCount: records.length,
+  };
 }
 
 export default function SensorHistoryScreen() {
@@ -33,6 +93,10 @@ export default function SensorHistoryScreen() {
   const [autoCaptureEnabled, setAutoCaptureEnabled] = useState(false);
   const [nextCaptureAt, setNextCaptureAt] = useState<number | null>(null);
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [aiPrediction, setAiPrediction] = useState<AiPrediction | null>(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -146,6 +210,40 @@ export default function SensorHistoryScreen() {
   }, [autoCaptureEnabled, selectedLayoutId]);
 
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const report = buildHistoryReport(history);
+
+  useEffect(() => {
+    if (!selectedLayoutId) {
+      setAiPrediction(null);
+      return;
+    }
+
+    const loadPrediction = async () => {
+      try {
+        setPredictionLoading(true);
+        setPredictionError(null);
+        const user = auth.currentUser;
+        if (!user) throw new Error("User not authenticated");
+
+        const token = await user.getIdToken();
+        const response = await fetch(
+          `/api/sensor-history/predict?layoutId=${encodeURIComponent(selectedLayoutId)}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const json = await response.json();
+        if (!response.ok) throw new Error(json?.error || "Prediction failed");
+        setAiPrediction(json.data as AiPrediction);
+      } catch (error) {
+        console.error("Load AI parking prediction error:", error);
+        setAiPrediction(null);
+        setPredictionError(error instanceof Error ? error.message : "Prediction unavailable");
+      } finally {
+        setPredictionLoading(false);
+      }
+    };
+
+    loadPrediction();
+  }, [selectedLayoutId, refreshKey]);
 
   useEffect(() => {
     if (!autoCaptureEnabled) {
@@ -262,7 +360,58 @@ export default function SensorHistoryScreen() {
             <div className="text-sm text-gray-600 dark:text-gray-300">{snapshotMessage}</div>
           )}
 
-          {selectedLayoutId && <SensorHistory layoutId={selectedLayoutId} refreshKey={refreshKey} />}
+          {report && (
+            <section className="border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">Analytical report</p>
+                  <h2 className="text-xl font-bold">Predictive parking demand</h2>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Based on {report.sampleCount} snapshots</p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="border-l-4 border-orange-500 bg-white p-3 dark:bg-slate-800">
+                  <p className="text-xs text-gray-500">Peak parking hour</p>
+                  <p className="mt-1 text-lg font-bold">{report.peakHour}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{(report.peakOccupancy * 100).toFixed(0)}% average occupied</p>
+                </div>
+                <div className="border-l-4 border-red-500 bg-white p-3 dark:bg-slate-800">
+                  <p className="text-xs text-gray-500">AI expected congestion</p>
+                  <p className="mt-1 text-lg font-bold">
+                    {predictionLoading ? "..." : `${((aiPrediction?.predictedOccupancy ?? report.projectedOccupancy) * 100).toFixed(0)}%`}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Random Forest, 30 minutes ahead</p>
+                </div>
+                <div className="border-l-4 border-green-600 bg-white p-3 dark:bg-slate-800">
+                  <p className="text-xs text-gray-500">AI future availability</p>
+                  <p className="mt-1 text-lg font-bold">
+                    {predictionLoading ? "..." : `${aiPrediction?.predictedAvailableSlots ?? report.projectedAvailable} slots`}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Random Forest estimate</p>
+                </div>
+                <div className="border-l-4 border-blue-500 bg-white p-3 dark:bg-slate-800">
+                  <p className="text-xs text-gray-500">Current behavior</p>
+                  <p className="mt-1 text-lg font-bold capitalize">{report.trend} demand</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{report.latestAvailable} slots available now</p>
+                </div>
+              </div>
+
+              <div className="mt-4 border-t border-gray-200 pt-3 text-sm text-gray-700 dark:border-slate-700 dark:text-gray-300">
+                <span className="font-semibold">Behavior analysis:</span> Demand is {report.trend} across the latest observations, with the busiest recurring hour at {report.peakHour}.
+                <span className="ml-1 text-gray-500">{aiPrediction ? `The Random Forest trained on ${aiPrediction.trainingRecords} records and returned MAE ${(aiPrediction.metrics.mae * 100).toFixed(1)} percentage points.` : "The AI forecast is loading from the Python model."}</span>
+                {predictionError && <span className="ml-1 text-red-600">{predictionError}</span>}
+              </div>
+            </section>
+          )}
+
+          {selectedLayoutId && (
+            <SensorHistory
+              layoutId={selectedLayoutId}
+              refreshKey={refreshKey}
+              onHistoryChange={setHistory}
+            />
+          )}
         </div>
       </div>
     </main>

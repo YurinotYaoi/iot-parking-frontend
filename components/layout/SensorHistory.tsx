@@ -2,11 +2,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { onValue, ref } from 'firebase/database';
-import { rtdb, auth } from '@/lib/configs/firebaseClient';
-import { DataSnapshot } from "firebase/database";
+import { DataSnapshot, onValue, ref } from 'firebase/database';
+import { rtdb } from '@/lib/configs/firebaseClient';
 
-type HistoryEntry = {
+export type HistoryEntry = {
   id: string;
   layoutId?: string;
   timestamp?: number;
@@ -21,6 +20,7 @@ type HistoryEntry = {
 interface SensorHistoryProps {
   readonly layoutId?: string;
   readonly refreshKey?: number;
+  readonly onHistoryChange?: (history: HistoryEntry[]) => void;
 }
 
 
@@ -38,7 +38,7 @@ function parseSnapshotToHistoryEntries(snapshot: DataSnapshot): HistoryEntry[] {
 }
 
 
-export default function SensorHistory({ layoutId, refreshKey = 0 }: SensorHistoryProps ) {
+export default function SensorHistory({ layoutId, refreshKey = 0, onHistoryChange }: SensorHistoryProps ) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,13 +46,9 @@ export default function SensorHistory({ layoutId, refreshKey = 0 }: SensorHistor
   
   useEffect(() => {
     if (!layoutId) {
-      setHistory([]);
-      setError(null);
+      onHistoryChange?.([]);
       return;
     }
-
-    setLoading(true);
-    setError(null);
 
     const historyRef = ref(rtdb, `sensorHistory/${layoutId}`);
     const unsub = onValue(
@@ -60,6 +56,7 @@ export default function SensorHistory({ layoutId, refreshKey = 0 }: SensorHistor
       (snapshot) => {
         const entries = parseSnapshotToHistoryEntries(snapshot);
         setHistory(entries);
+        onHistoryChange?.(entries);
         setLoading(false);
       },
       (err) => {
@@ -69,7 +66,7 @@ export default function SensorHistory({ layoutId, refreshKey = 0 }: SensorHistor
     );
 
     return () => unsub();
-  }, [layoutId, refreshKey]);
+  }, [layoutId, onHistoryChange, refreshKey]);
 
   const formatTime = (timestamp?: number) => {
     if (!timestamp) return '—';
