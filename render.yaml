@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: iot-parking-web
+    runtime: node
+    buildCommand: npm ci && python3 -m pip install -r requirements.txt && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PYTHON_EXECUTABLE
+        value: python3

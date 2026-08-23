@@ -34,7 +34,38 @@ export const GET = withAuth(async (req) => {
 
     return successResponse(JSON.parse(stdout.trim()));
   } catch (error) {
-    console.error('Sensor history prediction failed:', error);
+    const stderr = error?.stderr?.trim();
+    const details = stderr || error?.message || 'Unknown prediction service error';
+    console.error('Sensor history prediction failed:', details);
+
+    if (error?.code === 'ENOENT') {
+      return errorResponse(
+        'Prediction service is unavailable: Python is not installed or PYTHON_EXECUTABLE is invalid',
+        502,
+      );
+    }
+
+    if (details.includes('No module named')) {
+      return errorResponse(
+        'Prediction service is unavailable: Python dependencies are not installed',
+        502,
+      );
+    }
+
+    if (details.includes('Not enough sensor history')) {
+      return errorResponse(
+        'Not enough sensor history to generate a prediction yet',
+        422,
+      );
+    }
+
+    if (details.includes('HTTP Error 401') || details.includes('HTTP Error 403')) {
+      return errorResponse(
+        'Prediction service cannot read Firebase sensor history; check its database credentials',
+        502,
+      );
+    }
+
     return errorResponse('Unable to generate a parking demand prediction', 502);
   }
 });
