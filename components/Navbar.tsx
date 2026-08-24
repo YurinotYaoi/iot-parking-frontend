@@ -18,7 +18,7 @@ const Navbar = () => {
       <ul className="flex items-center justify-between">
         <li className="flex items-center">
           <button onClick={handleHomeClick} className="text-2xl font-bold text-white cursor-hover:text-gray-300">
-            FlexPark
+            ADPark
           </button>
         </li>
         <li className="flex items-center">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "FlexPark - Home",
+  title: "ADPark - Home",
 };
 export default function Home() {
 
@@ -15,7 +15,7 @@ export default function Home() {
             <span className="text-red-700">IoT</span> frontend
           </h1>
           <p>
-           The brain of your smart parking lot. Track, manage, and scale your IoT infrastructure with FlexPark's intuitive real-time interface.
+           The brain of your smart parking lot. Track, manage, and scale your IoT infrastructure with ADPark's intuitive real-time interface.
           </p>
           <div className="mt-4">
             <Link

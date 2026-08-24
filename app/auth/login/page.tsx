@@ -3,7 +3,7 @@ import LoginForm from "@/auth/components/LoginForm";
 import type { Metadata } from "next"; 
 
 export const metadata: Metadata = {
-  title: "Login | FlexPark",
+  title: "Login | ADPark",
 };
 
 export default function LoginScreen() {
