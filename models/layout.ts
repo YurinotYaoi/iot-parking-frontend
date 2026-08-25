@@ -1,4 +1,5 @@
 export type CellType = "empty" | "road" | "slot";
+export type LayoutTool = CellType | "available" | "reserved";
 
 export interface SpotData {
   slotId: string;

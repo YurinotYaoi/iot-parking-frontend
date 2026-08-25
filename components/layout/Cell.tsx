@@ -12,10 +12,10 @@ interface Props {
 const getCellContent = (
   type: string,
   spotData: CellData["spotData"],
-  liveStatus: string | undefined
+  status: string | undefined
 ) => {
   if (type === "slot" && spotData) {
-    const display = liveStatus ?? "—";
+    const display = status ?? "—";
     return (
       <>
         <div className="font-bold text-white">{spotData.slotName}</div>
@@ -29,17 +29,25 @@ const getCellContent = (
   return <div className="text-gray-500 text-xs">empty</div>;
 };
 
-const getColor = (type: string, liveStatus: string | undefined) => {
+const getColor = (type: string, status: string | undefined) => {
   if (type === "road") return "bg-gray-500 hover:bg-gray-600";
   if (type === "slot") {
-    if (liveStatus === "free") return "bg-green-500 hover:bg-green-600";
-    if (liveStatus === "occupied") return "bg-red-500 hover:bg-red-600";
+    if (status === "occupied") return "bg-red-500 hover:bg-red-600";
+    if (status === "reserved") return "bg-yellow-400 hover:bg-yellow-500";
+    if (status === "free" || status === "available") return "bg-green-500 hover:bg-green-600";
     return "bg-blue-500 hover:bg-blue-600";
   }
   return "bg-green-100 hover:bg-green-200";
 };
 
 export default function Cell({ data, liveStatus, onClick, onRightClick }: Props) {
+  const status =
+    liveStatus === "occupied"
+      ? "occupied"
+      : data.spotData?.status === "reserved"
+        ? "reserved"
+      : liveStatus ?? data.spotData?.status;
+
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     onRightClick?.(event);
@@ -73,11 +81,11 @@ export default function Cell({ data, liveStatus, onClick, onRightClick }: Props)
         text-xs
         border-0
         rounded
-        ${getColor(data.type, liveStatus)}
+        ${getColor(data.type, status)}
       `}
-      aria-label={`Cell: ${data.type}`}
+      aria-label={`Cell: ${data.type}${status ? `, ${status}` : ""}`}
     >
-      {getCellContent(data.type, data.spotData, liveStatus)}
+      {getCellContent(data.type, data.spotData, status)}
     </button>
   );
 }

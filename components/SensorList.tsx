@@ -123,6 +123,8 @@ export default function SensorList() {
           let statusDisplay = "🟢 Available";
           if (displayStatus === "occupied" || displayStatus === "offline") {
             statusDisplay = "🔴 " + (displayStatus === "occupied" ? "Occupied" : "Offline");
+          } else if (spot.status === "reserved") {
+            statusDisplay = "🟡 Reserved";
           } else if (displayStatus === "online") {
             statusDisplay = "🟡 Online";
           }

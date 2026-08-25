@@ -1,16 +1,18 @@
 "use client";
 
-import { CellType } from "@/models/layout";
+import { LayoutTool } from "@/models/layout";
 
 interface Props {
-  readonly selectedTool: CellType | null;
-  readonly setSelectedTool: (tool: CellType | null) => void;
+  readonly selectedTool: LayoutTool | null;
+  readonly setSelectedTool: (tool: LayoutTool | null) => void;
 }
 
 export default function Toolbar({ selectedTool, setSelectedTool }: Props) {
-  const tools: { value: CellType; label: string }[] = [
+  const tools: { value: LayoutTool; label: string }[] = [
     { value: "empty", label: "Empty" },
     { value: "road", label: "Road" },
+    { value: "available", label: "Available" },
+    { value: "reserved", label: "Reserved" },
   ];
 
   return (

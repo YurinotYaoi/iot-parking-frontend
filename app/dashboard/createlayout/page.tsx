@@ -6,7 +6,7 @@ import Grid from "@/components/layout/Grid";
 import Toolbar from "@/components/layout/Toolbar";
 import AvailableSpots from "@/components/layout/AvailableSpots";
 import { useGrid } from "@/hooks/useGrid";
-import { CellType, SpotData } from "@/models/layout";
+import { LayoutTool, SpotData } from "@/models/layout";
 import { createLayout } from "@/services/layoutService";
 import { auth } from "@/lib/configs/firebaseClient";
 import { useSensorMap } from "@/hooks/useSensorMap";
@@ -24,11 +24,12 @@ export default function CreateLayoutPage() {
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
 
-  const { grid, updateCell, resizeGrid, clearCell, getPlacedSpots } = useGrid(rows, cols);
+  const { grid, updateCell, updateCellStatus, resizeGrid, clearCell, getPlacedSpots } = useGrid(rows, cols);
 
-  const [selectedTool, setSelectedTool] = useState<CellType | null>(null);
+  const [selectedTool, setSelectedTool] = useState<LayoutTool | null>(null);
   const [selectedSpot, setSelectedSpot] = useState<SpotData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [spotsRefreshKey, setSpotsRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const { sensorMap } = useSensorMap();
@@ -107,8 +108,43 @@ export default function CreateLayoutPage() {
     if (selectedSpot) {
       updateCell(rowIndex, colIndex, "slot", selectedSpot);
       setSelectedSpot(null);
+    } else if (selectedTool === "available" || selectedTool === "reserved") {
+      void updateCellStatusInFirebase(rowIndex, colIndex, selectedTool);
     } else if (selectedTool) {
       updateCell(rowIndex, colIndex, selectedTool);
+    }
+  };
+
+  const updateCellStatusInFirebase = async (
+    rowIndex: number,
+    colIndex: number,
+    status: "available" | "reserved"
+  ) => {
+    const cell = grid[rowIndex]?.[colIndex];
+    if (cell?.type !== "slot" || !cell.spotId) {
+      toast.error("Select a placed parking slot to change its status.");
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      setError("Not authenticated");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/spots/${cell.spotId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error(`Failed to set slot ${status}`);
+      updateCellStatus(rowIndex, colIndex, status);
+      setSpotsRefreshKey((current) => current + 1);
+      toast.success(`${cell.spotData?.slotName || "Slot"} marked ${status}`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : `Failed to set slot ${status}`);
     }
   };
 
@@ -244,6 +280,7 @@ export default function CreateLayoutPage() {
               {/* AVAILABLE SPOTS */}
               <div className="border rounded-lg p-4 bg-gray-50 dark:bg-slate-900 dark:border-slate-700 flex-1 overflow-hidden flex flex-col">
                 <AvailableSpots
+                  key={spotsRefreshKey}
                   placedSpotIds={placedSpots}
                   onSelectSpot={handleSelectSpot}
                 />

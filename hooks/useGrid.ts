@@ -69,6 +69,20 @@ export const useGrid = (rows: number, cols: number, initialGrid?: GridType) => {
     });
   };
 
+  const updateCellStatus = (row: number, col: number, status: string) => {
+    setGrid((prev) => {
+      const newGrid = prev.map((r) => [...r]);
+      const cell = newGrid[row]?.[col];
+      if (!cell || cell.type !== "slot" || !cell.spotData) return prev;
+
+      newGrid[row][col] = {
+        ...cell,
+        spotData: { ...cell.spotData, status },
+      };
+      return newGrid;
+    });
+  };
+
   const getPlacedSpots = (): string[] => {
     const placedSpotIds: string[] = [];
     grid.forEach((row) => {
@@ -81,5 +95,5 @@ export const useGrid = (rows: number, cols: number, initialGrid?: GridType) => {
     return placedSpotIds;
   };
 
-  return { grid, updateCell, resizeGrid, clearCell, getPlacedSpots };
+  return { grid, updateCell, updateCellStatus, resizeGrid, clearCell, getPlacedSpots };
 };

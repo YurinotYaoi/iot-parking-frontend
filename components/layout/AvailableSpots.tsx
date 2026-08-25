@@ -110,6 +110,7 @@ export default function AvailableSpots({ placedSpotIds, onSelectSpot, currentLay
             const getStatusClass = () => {
               if (spot.status === "available") return "bg-green-600";
               if (spot.status === "occupied") return "bg-red-600";
+              if (spot.status === "reserved") return "bg-yellow-500 text-slate-900";
               return "bg-gray-600";
             };
 

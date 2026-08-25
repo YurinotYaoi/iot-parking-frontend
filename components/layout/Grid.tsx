@@ -1,12 +1,12 @@
 "use client";
 
 import Cell from "./Cell";
-import { GridType, CellType } from "@/models/layout";
+import { GridType, LayoutTool } from "@/models/layout";
 import type { SensorMap } from "@/hooks/useSensorMap";
 
 interface GridProps {
   readonly grid: GridType;
-  readonly selectedTool: CellType | null;
+  readonly selectedTool: LayoutTool | null;
   readonly updateCell: (row: number, col: number) => void;
   readonly clearCell?: (row: number, col: number) => void;
   readonly sensorMap?: SensorMap;
